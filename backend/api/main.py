@@ -279,3 +279,14 @@ def get_result(
     if not job:
         raise HTTPException(status_code=404, detail="task not found")
     return job.to_dict()
+
+
+@app.get("/tasks/{task_id}")
+def get_task(
+    task_id: str,
+    user: User = Depends(get_current_user),
+) -> Dict:
+    detail = service.get_project_detail(task_id)
+    if not detail:
+        raise HTTPException(status_code=404, detail="task not found")
+    return detail

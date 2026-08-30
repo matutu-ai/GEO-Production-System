@@ -3,6 +3,7 @@ const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_BASE ||
   "";
+const API_PREFIX = API_BASE ? "" : "/api";
 const TOKEN_KEY = "geo_token";
 const USER_KEY = "geo_user";
 
@@ -46,34 +47,34 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  health: () => request("/api/health"),
+  health: () => request(`${API_PREFIX}/health`),
   login: (username, password) =>
-    request("/api/login", {
+    request(`${API_PREFIX}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     }),
-  me: () => request("/api/users/me"),
-  projects: () => request("/api/projects"),
-  project: (taskId) => request(`/api/projects/${taskId}`),
+  me: () => request(`${API_PREFIX}/users/me`),
+  projects: () => request(`${API_PREFIX}/projects`),
+  project: (taskId) => request(`${API_PREFIX}/tasks/${taskId}`),
   analyze: (formData) =>
-    request("/api/analyze", {
+    request(`${API_PREFIX}/analyze`, {
       method: "POST",
       body: formData,
     }),
   createProject: (formData) =>
-    request("/api/projects/create", {
+    request(`${API_PREFIX}/projects/create`, {
       method: "POST",
       body: formData,
     }),
   rerun: (taskId) =>
-    request(`/api/projects/${taskId}/rerun`, {
+    request(`${API_PREFIX}/projects/${taskId}/rerun`, {
       method: "POST",
     }),
   deleteProject: (taskId) =>
-    request(`/api/projects/${taskId}`, {
+    request(`${API_PREFIX}/projects/${taskId}`, {
       method: "DELETE",
     }),
   downloadUrl: (taskId, filename) =>
-    `${API_BASE}/api/projects/${taskId}/download/${encodeURIComponent(filename)}?token=${encodeURIComponent(getToken())}`,
+    `${API_BASE}${API_PREFIX}/projects/${taskId}/download/${encodeURIComponent(filename)}?token=${encodeURIComponent(getToken())}`,
 };

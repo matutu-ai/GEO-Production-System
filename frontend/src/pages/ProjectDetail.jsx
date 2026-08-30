@@ -411,6 +411,13 @@ function ProjectDetail() {
           <Tag color={getStatusMeta(project.status).color}>
             {getStatusMeta(project.status).label}
           </Tag>
+          {isActiveStatus(project.status) && (
+            <Progress
+              percent={Number(project.progress) || 0}
+              size="small"
+              style={{ width: 160 }}
+            />
+          )}
           <Button icon={<ReloadOutlined />} onClick={load}>
             刷新
           </Button>

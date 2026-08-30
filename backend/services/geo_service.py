@@ -27,6 +27,14 @@ STORAGE_DIR = STORAGE_PATH
 LEGACY_PROJECTS_FILE = STORAGE_DIR / "legacy_projects.json"
 
 ACTIVE_STATUSES = {"CREATED", "PARSING", "ANALYZING", "GENERATING"}
+STATUS_PROGRESS = {
+    "CREATED": 10,
+    "PARSING": 25,
+    "ANALYZING": 60,
+    "GENERATING": 85,
+    "COMPLETED": 100,
+    "FAILED": 100,
+}
 STATUS_ALIASES = {
     "queued": "CREATED",
     "running": "ANALYZING",
@@ -78,6 +86,7 @@ class GEOJob:
             "id": self.task_id,
             "task_id": self.task_id,
             "status": self.status,
+            "progress": STATUS_PROGRESS.get(self.status, 10),
             "customer_name": self.customer_name,
             "website": self.website,
             "industry": self.industry,
