@@ -6,6 +6,7 @@ const API_BASE =
 const API_PREFIX = API_BASE ? "" : "/api";
 const TOKEN_KEY = "geo_token";
 const USER_KEY = "geo_user";
+export const AUTH_EXPIRED_EVENT = "geo-auth-expired";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY) || "";
@@ -41,6 +42,12 @@ async function request(path, options = {}) {
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      clearAuth();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+      }
+    }
     throw new Error(data.detail || `请求失败：${response.status}`);
   }
   return response.json();
@@ -67,6 +74,12 @@ export const api = {
       method: "POST",
       body: formData,
     }),
+  uploadDocument: (formData) =>
+    request(`${API_PREFIX}/documents/upload`, {
+      method: "POST",
+      body: formData,
+    }),
+  documentTask: (taskId) => request(`${API_PREFIX}/documents/${taskId}`),
   rerun: (taskId) =>
     request(`${API_PREFIX}/projects/${taskId}/rerun`, {
       method: "POST",

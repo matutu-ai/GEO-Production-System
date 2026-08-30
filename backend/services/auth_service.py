@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
@@ -17,6 +18,8 @@ ROLE_RANK = {
     "MANAGER": 3,
     "ADMIN": 4,
 }
+
+logger = logging.getLogger(__name__)
 
 
 class User:
@@ -89,14 +92,29 @@ class AuthService:
     def decode_token(self, token: str) -> Optional[Dict[str, Any]]:
         try:
             return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        except jwt.PyJWTError:
+        except jwt.ExpiredSignatureError:
+            logger.warning(
+                "JWT rejected: expired, token_prefix=%s",
+                token[:12] if isinstance(token, str) else "non-string",
+            )
+            return None
+        except jwt.PyJWTError as exc:
+            logger.warning(
+                "JWT rejected: invalid, token_prefix=%s, reason=%s",
+                token[:12] if isinstance(token, str) else "non-string",
+                exc,
+            )
             return None
 
     def get_user_from_token(self, token: str) -> Optional[User]:
         payload = self.decode_token(token)
         if not payload:
             return None
-        return self.users.get(str(payload.get("sub", "")))
+        user_id = str(payload.get("sub", ""))
+        user = self.users.get(user_id)
+        if not user:
+            logger.warning("JWT rejected: user not found, sub=%s", user_id)
+        return user
 
     def list_users(self) -> list[User]:
         return sorted(

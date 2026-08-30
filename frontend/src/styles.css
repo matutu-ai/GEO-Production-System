@@ -72,3 +72,10 @@ body {
   width: 100%;
   max-width: 420px;
 }
+
+.auth-checking {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

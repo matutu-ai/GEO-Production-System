@@ -1,4 +1,5 @@
-import { Button, Layout, Menu, Space, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { Button, Layout, Menu, Space, Spin, Typography } from "antd";
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -12,7 +13,13 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { clearAuth, getCurrentUser, getToken } from "./api";
+import {
+  AUTH_EXPIRED_EVENT,
+  api,
+  clearAuth,
+  getCurrentUser,
+  getToken,
+} from "./api";
 import Dashboard from "./pages/Dashboard";
 import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -36,6 +43,8 @@ const CLIENT_REPORT_PATHS = [
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [, setAuthVersion] = useState(0);
+  const [tokenReady, setTokenReady] = useState(!getToken());
   const token = getToken();
   const user = getCurrentUser();
   const isLoginPage = location.pathname === "/login";
@@ -49,6 +58,45 @@ function App() {
   const selectedKey =
     visibleMenuItems.find((item) => item.key === location.pathname)?.key || "/";
 
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      clearAuth();
+      setAuthVersion((version) => version + 1);
+      navigate("/login", { replace: true });
+    };
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!token || isLoginPage) {
+      setTokenReady(true);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setTokenReady(false);
+    api
+      .me()
+      .then(() => {
+        if (!cancelled) {
+          setTokenReady(true);
+        }
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+        clearAuth();
+        setAuthVersion((version) => version + 1);
+        setTokenReady(true);
+        navigate("/login", { replace: true });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, isLoginPage, navigate]);
+
   if (!token && !isLoginPage) {
     return <Navigate to="/login" replace />;
   }
@@ -57,6 +105,13 @@ function App() {
   }
   if (!token) {
     return <Login />;
+  }
+  if (!tokenReady) {
+    return (
+      <div className="auth-checking">
+        <Spin size="large" tip="正在校验登录状态" />
+      </div>
+    );
   }
   if (isClient && !isClientReportPath) {
     return <Navigate to="/reports" replace />;
