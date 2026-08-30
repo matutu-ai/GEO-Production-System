@@ -18,6 +18,11 @@ MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "mock")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 MODEL_NAME = os.getenv("MODEL_NAME", OPENAI_MODEL)
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "*").split(",")
+    if origin.strip()
+]
 
 STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "json")
 STORAGE_PATH = Path(os.getenv("STORAGE_PATH", str(PROJECT_ROOT / "storage")))

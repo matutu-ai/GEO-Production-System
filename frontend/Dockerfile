@@ -5,12 +5,12 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-ARG VITE_API_BASE_URL=""
+ARG VITE_API_URL=""
 
 COPY . .
 
-RUN if [ -n "$VITE_API_BASE_URL" ]; then \
-      printf 'VITE_API_BASE_URL=%s\n' "$VITE_API_BASE_URL" > .env.production; \
+RUN if [ -n "$VITE_API_URL" ]; then \
+      printf 'VITE_API_URL=%s\n' "$VITE_API_URL" > .env.production; \
     fi \
     && npm run build
 

@@ -9,6 +9,7 @@ services:
       MODEL_PROVIDER: ${MODEL_PROVIDER:-mock}
       STORAGE_BACKEND: ${STORAGE_BACKEND:-json}
       STORAGE_PATH: /app/storage
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://housun.shop}
       JWT_SECRET: ${JWT_SECRET:-geo-production-system-local-secret}
     ports:
       # Host Nginx owns 80/443 in production; backend only needs loopback access.

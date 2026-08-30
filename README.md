@@ -88,7 +88,8 @@ GEO-Production-System/
 | --- | --- | --- |
 | `APP_ENV` | 运行环境 | `production` |
 | `APP_VERSION` | API 版本 | `2.2.0` |
-| `API_BASE_URL` | 生产前端写入的 API 地址 | `https://api.geo.example.com` |
+| `API_BASE_URL` | Docker 构建时写入前端的 API 地址 | `https://api.housun.shop` |
+| `CORS_ORIGINS` | 后端允许的跨域前端地址 | `https://housun.shop` |
 | `OPENAI_API_KEY` | OpenAI/兼容模型密钥，空值使用 Mock | 空 |
 | `MODEL_NAME` | 模型名称 | `gpt-4o-mini` |
 | `MODEL_PROVIDER` | 模型提供方，预留切换 | `mock` |
@@ -96,7 +97,7 @@ GEO-Production-System/
 | `STORAGE_PATH` | 项目、上传和报告存储目录 | `/app/storage` |
 | `JWT_SECRET` | JWT 签名密钥，生产必须替换 | 本地默认值 |
 | `JWT_EXPIRE_MINUTES` | Token 有效期 | `1440` |
-| `VITE_API_BASE_URL` | 前端构建时 API 基础地址 | `https://api.geo.example.com` |
+| `VITE_API_URL` | Cloudflare Pages / 前端构建时 API 基础地址 | `https://api.housun.shop` |
 
 生产环境不要提交 `.env`，并确保 `JWT_SECRET`、`OPENAI_API_KEY` 已替换为真实值。
 

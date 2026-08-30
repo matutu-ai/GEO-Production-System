@@ -4,7 +4,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${API_BASE_URL:-https://api.geo.example.com}
+        VITE_API_URL: ${API_BASE_URL:-https://api.housun.shop}
 
   backend:
     environment:

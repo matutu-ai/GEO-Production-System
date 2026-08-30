@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from api.deps import get_current_user, get_optional_user, require_roles
-from config.settings import VERSION
+from config.settings import CORS_ORIGINS, VERSION
 from services.geo_service import GeoService, UPLOAD_DIR
 from services.auth_service import AuthService, User, get_auth_service
 
@@ -28,7 +28,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

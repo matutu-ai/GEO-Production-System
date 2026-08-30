@@ -33,13 +33,14 @@ cd "${DEPLOY_DIR}"
 
 if [ ! -f .env ]; then
   sudo cp .env.example .env
-  sudo sed -i "s|https://api.geo.example.com|https://${API_DOMAIN}|g" .env
+  sudo sed -i "s|https://api.housun.shop|https://${API_DOMAIN}|g" .env
+  sudo sed -i "s|https://housun.shop|https://${DOMAIN}|g" .env
   sudo sed -i "s|JWT_SECRET=geo-production-system-local-secret|JWT_SECRET=$(openssl rand -hex 32)|g" .env
 fi
 
 if [ ! -f frontend/.env.production ]; then
   sudo cp frontend/.env.production.example frontend/.env.production
-  sudo sed -i "s|https://api.geo.example.com|https://${API_DOMAIN}|g" frontend/.env.production
+  sudo sed -i "s|https://api.housun.shop|https://${API_DOMAIN}|g" frontend/.env.production
 fi
 
 echo "==> Starting Docker services"
