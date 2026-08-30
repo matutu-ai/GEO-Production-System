@@ -36,10 +36,22 @@ async function request(path, options = {}) {
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    console.error("[geo-api] request failed", { path, apiBase: API_BASE, error });
+    const detail =
+      error?.message === "Failed to fetch" || error instanceof TypeError
+        ? import.meta.env.DEV
+          ? "无法连接本地后端，请先启动 uvicorn"
+          : "无法连接后端服务，请稍后重试"
+        : error.message || "请求失败";
+    throw new Error(detail);
+  }
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
