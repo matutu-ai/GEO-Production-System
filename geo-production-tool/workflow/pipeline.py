@@ -66,7 +66,12 @@ class GEOPipeline:
         keyword_result = KeywordAgent().run(keyword_input)
         save_json(self.output_dir / "keywords.json", keyword_result)
 
-        persona_result = PersonaAgent().run(company_result)
+        persona_result = PersonaAgent().run(
+            {
+                "result": company_result["result"],
+                "output_dir": str(self.output_dir),
+            }
+        )
         save_json(self.output_dir / "personas.json", persona_result)
 
         content_input = {

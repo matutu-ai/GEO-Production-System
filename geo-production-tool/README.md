@@ -1,4 +1,4 @@
-# GEO Production Tool V1.4
+# GEO Production Tool V1.5
 
 内部 GEO 服务交付工具，将客户企业资料自动转换为 GEO 优化交付方案。
 
@@ -13,6 +13,7 @@
 - GEO优化策略 Strategy Agent
 - 企业级交付报告 Report Agent：docx + pdf
 - 报告模板 `report_templates/geo_report_template.docx`
+- FastAPI 服务层：上传客户资料并运行完整 GEO Pipeline
 
 ## 执行流程
 
@@ -50,3 +51,21 @@ python main.py
 - `output/customer_profile.json`
 - `output/business_analysis.json`
 - `output/strategy_plan.json`
+
+## API 服务
+
+启动：
+
+```bash
+uvicorn api.main:app --reload
+```
+
+打开 `http://127.0.0.1:8000/docs` 可查看 Swagger 接口。
+
+接口：
+
+- `GET /health`：服务状态与版本
+- `POST /analyze`：上传 `.xlsx` / `.docx` / `.pdf` 客户资料，返回 `task_id` 和输出文件
+- `GET /result/{task_id}`：查询任务结果
+
+API 任务输出默认保存在 `output/tasks/{task_id}/`，上传文件保存在 `storage/uploads/`。
