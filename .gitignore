@@ -13,6 +13,9 @@ __pycache__/
 !.env.example
 !.env.production.example
 
+# Wrangler / Cloudflare
+.wrangler/
+
 # Frontend
 node_modules/
 dist/
