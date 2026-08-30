@@ -1,4 +1,4 @@
-"""GEO Production Tool V1.3 entry point."""
+"""GEO Production Tool V1.4 entry point."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 def main() -> None:
     input_path = BASE_DIR / "input" / "demo_customer.xlsx"
-    print("GEO Production Tool V1")
+    print("GEO Production Tool V1.4")
     print("开始分析客户资料")
 
     result = GEOPipeline(output_dir=str(BASE_DIR / "output")).run(

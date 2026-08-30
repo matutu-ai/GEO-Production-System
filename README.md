@@ -1,4 +1,4 @@
-# GEO Production Tool V1.3
+# GEO Production Tool V1.4
 
 内部 GEO 服务交付工具，将客户企业资料自动转换为 GEO 优化交付方案。
 
@@ -11,7 +11,8 @@
 - 用户画像 Persona Agent
 - 30天内容规划 Content Agent
 - GEO优化策略 Strategy Agent
-- 交付报告 Report Agent
+- 企业级交付报告 Report Agent：docx + pdf
+- 报告模板 `report_templates/geo_report_template.docx`
 
 ## 执行流程
 
@@ -35,12 +36,14 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python scripts/create_demo_inputs.py
+python scripts/create_report_template.py
 python main.py
 ```
 
 默认读取 `input/demo_customer.xlsx`，输出文件生成到 `output/`，包括：
 
-- `output/GEO分析报告.md`
+- `output/GEO客户分析报告.docx`
+- `output/GEO客户分析报告.pdf`
 - `output/keyword_matrix.xlsx`
 - `output/persona_report.docx`
 - `output/content_plan.xlsx`
