@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${API_BASE_URL:-https://api.geo.example.com}
+
+  backend:
+    environment:
+      APP_ENV: production

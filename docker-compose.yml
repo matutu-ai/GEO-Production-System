@@ -11,7 +11,8 @@ services:
       STORAGE_PATH: /app/storage
       JWT_SECRET: ${JWT_SECRET:-geo-production-system-local-secret}
     ports:
-      - "8000:8000"
+      # Host Nginx owns 80/443 in production; backend only needs loopback access.
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./storage:/app/storage
     healthcheck:
@@ -30,4 +31,5 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      # Host Nginx is the public entry point in production.
+      - "127.0.0.1:8080:80"

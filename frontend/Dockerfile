@@ -5,8 +5,14 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+ARG VITE_API_BASE_URL=""
+
 COPY . .
-RUN npm run build
+
+RUN if [ -n "$VITE_API_BASE_URL" ]; then \
+      printf 'VITE_API_BASE_URL=%s\n' "$VITE_API_BASE_URL" > .env.production; \
+    fi \
+    && npm run build
 
 FROM nginx:1.27-alpine
 

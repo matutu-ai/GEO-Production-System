@@ -37,7 +37,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> Dict[str, str]:
-    return {"status": "running", "version": VERSION}
+    return {"status": "running", "service": "geo-production-system", "version": VERSION}
 
 
 class LoginRequest(BaseModel):

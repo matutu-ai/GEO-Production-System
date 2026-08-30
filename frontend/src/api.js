@@ -1,4 +1,7 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "";
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_BASE ||
+  "";
 const TOKEN_KEY = "geo_token";
 const USER_KEY = "geo_user";
 
