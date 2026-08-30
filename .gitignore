@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Runtime data
+backend/output/
+backend/storage/
+storage/projects/projects.json
+storage/projects/*.tmp
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/reports/*
+!storage/reports/.gitkeep
+storage/legacy_projects.json
+
+# OS / editor
+.DS_Store
+*.swp
