@@ -41,3 +41,33 @@ export function getStatusMeta(status) {
   };
   return meta[status] || { color: "default", label: status };
 }
+
+export const GEO_ACTIVE_STATUSES = new Set([
+  "PENDING",
+  "PROCESSING",
+  "ANALYZING",
+  "GENERATING",
+]);
+
+export function isActiveGeoStatus(status) {
+  return GEO_ACTIVE_STATUSES.has(status);
+}
+
+export function getGeoStatusMeta(status) {
+  const meta = {
+    PENDING: { color: "default", label: "待处理" },
+    PROCESSING: { color: "processing", label: "处理中" },
+    ANALYZING: { color: "processing", label: "AI 分析中" },
+    GENERATING: { color: "processing", label: "生成交付物" },
+    COMPLETED: { color: "success", label: "已完成" },
+    FAILED: { color: "error", label: "失败" },
+  };
+  return meta[status] || { color: "default", label: status || "-" };
+}
+
+export function formatFileSize(size) {
+  const value = Number(size) || 0;
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
+}

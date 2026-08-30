@@ -25,14 +25,23 @@ frontend/dist/
 # Runtime data
 backend/output/
 backend/storage/
+task_status.log
 storage/projects/projects.json
 storage/projects/*.tmp
 storage/uploads/*
 !storage/uploads/.gitkeep
+storage/documents/*
+!storage/documents/.gitkeep
 storage/reports/*
 !storage/reports/.gitkeep
 storage/legacy_projects.json
+storage/geo_analysis/projects.json
+storage/geo_analysis/projects.json.tmp
+storage/geo_analysis/exports/*
 
 # OS / editor
 .DS_Store
 *.swp
+
+# Runtime data
+apps/storage/

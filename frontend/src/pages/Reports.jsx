@@ -9,12 +9,13 @@ import {
   message,
 } from "antd";
 import {
+  ApartmentOutlined,
   DownloadOutlined,
   EyeOutlined,
   FilePdfOutlined,
   FileWordOutlined,
 } from "@ant-design/icons";
-import { api } from "../api";
+import { api, getCurrentUser } from "../api";
 import { getProjectId, getStatusMeta } from "../utils";
 
 function findReport(project, suffix) {
@@ -26,6 +27,7 @@ function findReport(project, suffix) {
 function Reports() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const user = getCurrentUser();
 
   const load = async () => {
     try {
@@ -130,6 +132,15 @@ function Reports() {
         <Typography.Title level={3} style={{ margin: 0 }}>
           报告中心
         </Typography.Title>
+        {user.role !== "CLIENT" && (
+          <Button
+            type="primary"
+            icon={<ApartmentOutlined />}
+            href="/reports/geo-analysis"
+          >
+            GEO 分析中心
+          </Button>
+        )}
       </div>
       <Card title="客户交付报告">
         <Table

@@ -229,8 +229,17 @@ class InputParserAgent:
                 ),
                 "",
             )
-            result["name"] = first_line
+            result["name"] = self._first_company_name(first_line)
         return result
+
+    @staticmethod
+    def _first_company_name(first_line: str) -> str:
+        for marker in ("企业介绍", "企业简介", "公司介绍", "公司简介"):
+            if marker in first_line:
+                candidate = first_line.split(marker, 1)[0].strip()
+                if candidate:
+                    return candidate
+        return first_line
 
     def _confidence(self, result: Dict[str, Any]) -> int:
         score = 50

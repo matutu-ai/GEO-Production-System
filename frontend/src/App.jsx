@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, Layout, Menu, Space, Spin, Typography } from "antd";
 import {
+  ApartmentOutlined,
   DashboardOutlined,
   FileTextOutlined,
   PlusCircleOutlined,
@@ -26,6 +27,9 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Report from "./pages/Report";
 import Login from "./pages/Login";
 import Reports from "./pages/Reports";
+import GeoAnalysis from "./pages/GeoAnalysis";
+import GeoAnalysisNew from "./pages/GeoAnalysisNew";
+import GeoAnalysisDetail from "./pages/GeoAnalysisDetail";
 
 const { Header, Content, Sider } = Layout;
 
@@ -33,11 +37,7 @@ const menuItems = [
   { key: "/", icon: <DashboardOutlined />, label: "项目总览" },
   { key: "/create", icon: <PlusCircleOutlined />, label: "创建项目" },
   { key: "/reports", icon: <FileTextOutlined />, label: "报告中心" },
-];
-
-const CLIENT_REPORT_PATHS = [
-  "/reports",
-  "/projects/",
+  { key: "/reports/geo-analysis", icon: <ApartmentOutlined />, label: "GEO 分析" },
 ];
 
 function App() {
@@ -49,9 +49,8 @@ function App() {
   const user = getCurrentUser();
   const isLoginPage = location.pathname === "/login";
   const isClient = user.role === "CLIENT";
-  const isClientReportPath = CLIENT_REPORT_PATHS.some((path) =>
-    location.pathname.startsWith(path)
-  );
+  const isClientReportPath =
+    location.pathname === "/reports" || location.pathname.startsWith("/projects/");
   const visibleMenuItems = isClient
     ? menuItems.filter((item) => item.key === "/reports")
     : menuItems;
@@ -160,6 +159,12 @@ function App() {
             <Route path="/projects/:taskId" element={<ProjectDetail />} />
             <Route path="/projects/:taskId/report" element={<Report />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/reports/geo-analysis" element={<GeoAnalysis />} />
+            <Route path="/reports/geo-analysis/new" element={<GeoAnalysisNew />} />
+            <Route
+              path="/reports/geo-analysis/:projectId"
+              element={<GeoAnalysisDetail />}
+            />
           </Routes>
         </Content>
       </Layout>

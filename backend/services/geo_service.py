@@ -44,6 +44,8 @@ STATUS_ALIASES = {
 
 ANALYSIS_FILES = {
     "customer_profile": "customer_profile.json",
+    "document_markdown": "document_markdown.json",
+    "knowledge_extract": "knowledge_extract.json",
     "company_profile": "company_profile.json",
     "business_analysis": "business_analysis.json",
     "keywords": "keywords.json",
@@ -147,6 +149,28 @@ class GeoService:
             created_time=item.get("created_time") or item.get("created_at") or now,
             updated_time=item.get("updated_time") or item.get("updated_at") or now,
         )
+
+    def _resolve_source_file(self, job: GEOJob) -> Optional[Path]:
+        """Find the uploaded source file even when an older record stores a stale path."""
+        candidates: List[Path] = []
+        if job.source_file:
+            candidates.append(Path(job.source_file))
+
+        upload_dir = UPLOAD_DIR / job.task_id
+        for suffix in (".xlsx", ".docx", ".pdf", ".txt"):
+            candidates.append(upload_dir / f"source{suffix}")
+        if upload_dir.is_dir():
+            candidates.extend(sorted(upload_dir.iterdir()))
+
+        legacy_upload_dir = STORAGE_PATH.parent / "geo-production-tool" / "storage" / "uploads" / job.task_id
+        if legacy_upload_dir.is_dir():
+            candidates.append(legacy_upload_dir)
+            candidates.extend(sorted(legacy_upload_dir.iterdir()))
+
+        for candidate in candidates:
+            if candidate.is_file():
+                return candidate
+        return None
 
     def _save(self) -> None:
         PROJECTS_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -311,13 +335,23 @@ class GeoService:
             return None, "not_found"
         if job.status in ACTIVE_STATUSES:
             return None, "active"
-        source_path = Path(job.source_file or "")
-        if not source_path.is_file():
+        source_path = self._resolve_source_file(job)
+        if source_path is None:
             return None, "missing_source"
 
-        output_dir = Path(job.output_dir or "")
-        if output_dir.is_dir():
-            shutil.rmtree(output_dir, ignore_errors=True)
+        old_output_dir = Path(job.output_dir or "")
+        if old_output_dir.is_dir():
+            shutil.rmtree(old_output_dir, ignore_errors=True)
+        new_output_dir = TASK_OUTPUT_DIR / job.task_id
+        if new_output_dir.is_dir():
+            shutil.rmtree(new_output_dir, ignore_errors=True)
+        with self._lock:
+            job.source_file = str(source_path)
+            job.output_dir = str(new_output_dir)
+            job.output_files = []
+            job.error_message = ""
+            job.updated_time = _now_iso()
+            self._save()
 
         self._set_status(job, "CREATED")
         thread = threading.Thread(

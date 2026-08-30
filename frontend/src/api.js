@@ -8,6 +8,10 @@ const TOKEN_KEY = "geo_token";
 const USER_KEY = "geo_user";
 export const AUTH_EXPIRED_EVENT = "geo-auth-expired";
 
+function geoUrl(path) {
+  return API_BASE ? path : `${API_PREFIX}${path.slice("/api".length)}`;
+}
+
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY) || "";
 }
@@ -102,4 +106,24 @@ export const api = {
     }),
   downloadUrl: (taskId, filename) =>
     `${API_BASE}${API_PREFIX}/projects/${taskId}/download/${encodeURIComponent(filename)}?token=${encodeURIComponent(getToken())}`,
+  geoCreateProject: (payload) =>
+    request(geoUrl("/api/geo/projects"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  geoAnalyze: (payload) =>
+    request(geoUrl("/api/geo/analyze"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+  geoProjects: () => request(geoUrl("/api/geo/projects")),
+  geoProject: (projectId) => request(geoUrl(`/api/geo/projects/${projectId}`)),
+  geoExports: (projectId) =>
+    request(geoUrl(`/api/geo/projects/${projectId}/export`)),
+  geoDownloadUrl: (projectId, filename) =>
+    `${API_BASE}${geoUrl(
+      `/api/geo/projects/${projectId}/export/${encodeURIComponent(filename)}`
+    )}?token=${encodeURIComponent(getToken())}`,
 };

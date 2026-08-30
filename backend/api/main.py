@@ -15,11 +15,25 @@ from api.deps import get_current_user, get_optional_user, require_roles
 from config.settings import CORS_ORIGINS, VERSION
 from services.geo_service import GeoService, UPLOAD_DIR
 from services.auth_service import AuthService, User, get_auth_service
+from services.document_service import DocumentService
+from services.geo_analysis_service import GeoAnalysisService
 
 ALLOWED_EXTENSIONS = {".xlsx", ".docx", ".pdf"}
+DOCUMENT_ALLOWED_EXTENSIONS = {
+    ".pdf",
+    ".docx",
+    ".pptx",
+    ".xlsx",
+    ".html",
+    ".htm",
+    ".txt",
+    ".md",
+}
 
 service = GeoService()
 auth_service = get_auth_service()
+document_service = DocumentService()
+geo_analysis_service = GeoAnalysisService()
 app = FastAPI(
     title="GEO Production System Beta API",
     description="GEO 内部交付平台 Beta API。",
@@ -49,6 +63,21 @@ class UpdateProjectRequest(BaseModel):
     owner: Optional[str] = None
     website: Optional[str] = None
     industry: Optional[str] = None
+
+
+class CreateGeoProjectRequest(BaseModel):
+    name: str
+    source: str = ""
+
+
+class AnalyzeGeoRequest(BaseModel):
+    project_id: str = ""
+    name: str = "GEO Analysis Project"
+    source: str = ""
+    source_type: str = "text"
+    content: str = ""
+    product_description: str = ""
+    company_info: str = ""
 
 
 @app.post("/login")
@@ -121,6 +150,87 @@ async def analyze(
             owner=user.username,
         )
     return job.to_dict()
+
+
+async def _save_document_upload(
+    file: UploadFile,
+    customer_name: str,
+    website: str,
+    industry: str,
+    user: User,
+) -> Dict:
+    filename = file.filename or "document.xlsx"
+    suffix = Path(filename).suffix.lower()
+    if suffix not in DOCUMENT_ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail="unsupported document type, expected pdf/docx/pptx/xlsx/html/txt/md",
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="uploaded document is empty")
+
+    task_id = uuid.uuid4().hex[:12]
+    document_dir = UPLOAD_DIR / "documents" / task_id
+    document_dir.mkdir(parents=True, exist_ok=True)
+    source_path = document_dir / f"source{suffix}"
+    source_path.write_bytes(content)
+
+    task = document_service.start_upload(source_path, original_filename=filename)
+    return {
+        "task_id": task.task_id,
+        "status": task.status,
+        "progress": task.progress,
+        "customer_name": customer_name,
+        "website": website,
+        "industry": industry,
+        "owner": user.username,
+    }
+
+
+@app.post("/documents/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    customer_name: str = Form(""),
+    website: str = Form(""),
+    industry: str = Form(""),
+    user: User = Depends(require_roles("ADMIN", "MANAGER", "MEMBER")),
+) -> Dict:
+    return await _save_document_upload(file, customer_name, website, industry, user)
+
+
+@app.post("/api/documents/upload")
+async def api_upload_document(
+    file: UploadFile = File(...),
+    customer_name: str = Form(""),
+    website: str = Form(""),
+    industry: str = Form(""),
+    user: User = Depends(require_roles("ADMIN", "MANAGER", "MEMBER")),
+) -> Dict:
+    return await _save_document_upload(file, customer_name, website, industry, user)
+
+
+@app.get("/documents/{task_id}")
+def get_document_task(
+    task_id: str,
+    user: User = Depends(get_current_user),
+) -> Dict:
+    task = document_service.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="document task not found")
+    return task.to_dict()
+
+
+@app.get("/api/documents/{task_id}")
+def api_get_document_task(
+    task_id: str,
+    user: User = Depends(get_current_user),
+) -> Dict:
+    task = document_service.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="document task not found")
+    return task.to_dict()
 
 
 @app.post("/projects/create")
@@ -290,3 +400,85 @@ def get_task(
     if not detail:
         raise HTTPException(status_code=404, detail="task not found")
     return detail
+
+
+@app.post("/api/geo/projects")
+def create_geo_project(
+    payload: CreateGeoProjectRequest,
+    user: User = Depends(require_roles("ADMIN", "MANAGER", "MEMBER")),
+) -> Dict:
+    if not payload.name.strip():
+        raise HTTPException(status_code=400, detail="project name is required")
+    return geo_analysis_service.create_project(payload.name, payload.source)
+
+
+@app.post("/api/geo/analyze")
+def analyze_geo_project(
+    payload: AnalyzeGeoRequest,
+    sync: bool = Query(False),
+    user: User = Depends(require_roles("ADMIN", "MANAGER", "MEMBER")),
+) -> Dict:
+    if payload.source_type not in {"url", "html", "markdown", "txt", "text"}:
+        raise HTTPException(status_code=400, detail="unsupported source_type")
+    project_id = payload.project_id.strip()
+    if project_id:
+        existing = geo_analysis_service.get_project(project_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="geo project not found")
+    else:
+        project = geo_analysis_service.create_project(
+            payload.name or "GEO Analysis Project",
+            payload.source,
+        )
+        project_id = project["id"]
+
+    input_data = {
+        "name": payload.name or "GEO Analysis Project",
+        "source": payload.source,
+        "source_type": payload.source_type,
+        "content": payload.content,
+        "product_description": payload.product_description,
+        "company_info": payload.company_info,
+    }
+    return geo_analysis_service.start_analysis(project_id, input_data, sync=sync)
+
+
+@app.get("/api/geo/projects")
+def list_geo_projects(
+    user: User = Depends(get_current_user),
+) -> Dict:
+    return {"projects": geo_analysis_service.list_projects()}
+
+
+@app.get("/api/geo/projects/{project_id}")
+def get_geo_project(
+    project_id: str,
+    user: User = Depends(get_current_user),
+) -> Dict:
+    project = geo_analysis_service.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="geo project not found")
+    return project
+
+
+@app.get("/api/geo/projects/{project_id}/export")
+def list_geo_project_exports(
+    project_id: str,
+    user: User = Depends(get_current_user),
+) -> Dict:
+    files = geo_analysis_service.list_exports(project_id)
+    return {"project_id": project_id, "files": files}
+
+
+@app.get("/api/geo/projects/{project_id}/export/{filename}")
+def download_geo_project_export(
+    project_id: str,
+    filename: str,
+    user: Optional[User] = Depends(get_optional_user),
+) -> FileResponse:
+    if not user:
+        raise HTTPException(status_code=401, detail="authentication required")
+    file_path = geo_analysis_service.get_export_path(project_id, filename)
+    if not file_path:
+        raise HTTPException(status_code=404, detail="export file not found")
+    return FileResponse(str(file_path), filename=Path(filename).name)

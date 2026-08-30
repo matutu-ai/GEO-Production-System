@@ -10,12 +10,14 @@ from agents.company_agent import CompanyAgent
 from agents.content_agent import ContentAgent
 from agents.input_parser_agent import InputParserAgent
 from agents.keyword_agent import KeywordAgent
+from agents.knowledge_agent.agent import KnowledgeExtractAgent
 from agents.monitor_agent import MonitorAgent
 from agents.persona_agent import PersonaAgent
 from agents.report_agent import ReportAgent
 from agents.score_agent import ScoreAgent
 from agents.strategy_agent import StrategyAgent
 from file_writer import save_json
+from workflow.nodes import DocumentParserNode
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
@@ -46,11 +48,30 @@ class GEOPipeline:
         else:
             return self._error("customer_data or input_path is required")
 
+        document_result: Dict[str, Any] = {}
+        if input_path and not str(input_path).startswith(("http://", "https://")):
+            try:
+                document_result = DocumentParserNode().run(str(input_path))
+                save_json(self.output_dir / "document_markdown.json", document_result)
+            except Exception as exc:
+                return self._error(f"document parsing failed: {exc}")
+
+        knowledge_input = {
+            "document": document_result,
+            "customer_profile": standardized,
+            "raw_information": standardized.get("raw_information", ""),
+        }
+        knowledge_result = KnowledgeExtractAgent().run(knowledge_input)
+        save_json(self.output_dir / "knowledge_extract.json", knowledge_result)
+        if knowledge_result.get("status") != "success":
+            return knowledge_result
+
         if status_callback:
             status_callback("ANALYZING")
 
         company_input = dict(standardized)
         company_input["output_dir"] = str(self.output_dir)
+        company_input["knowledge_extract"] = knowledge_result
         company_result = CompanyAgent().run(company_input)
         save_json(self.output_dir / "company_profile.json", company_result)
         if company_result.get("status") != "success":
@@ -183,6 +204,8 @@ class GEOPipeline:
         ):
             files.extend(result_item.get("result", {}).get("files", []))
         files.append(str(self.output_dir / "customer_profile.json"))
+        files.append(str(self.output_dir / "document_markdown.json"))
+        files.append(str(self.output_dir / "knowledge_extract.json"))
         files.append(str(self.output_dir / "business_analysis.json"))
         files.append(str(self.output_dir / "strategy_plan.json"))
         files.append(str(self.output_dir / "monitor_report.json"))
