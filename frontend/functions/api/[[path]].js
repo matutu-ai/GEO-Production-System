@@ -63,7 +63,7 @@ function userFromToken(token) {
 
 function requireUser(request) {
   const header = request.headers.get("Authorization") || "";
-  const token = header.replace(/^Bearer\s+/i, "");
+  const token = header.replace(/^Bearer\s+/i, "") || new URL(request.url).searchParams.get("token") || "";
   return userFromToken(token);
 }
 
